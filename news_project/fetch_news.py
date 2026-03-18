@@ -5,18 +5,41 @@ import pandas as pd
 API_KEY = "pub_937308483d6841c3a0da13fa0e3f8991"
 
 # Using newsdata.io API endpoint
-url = f"https://newsdata.io/api/1/latest?apikey={API_KEY}&language=en"
+def fetch_news(api_key, max_pages=60):
+    all_articles = []
+    url = f"https://newsdata.io/api/1/latest?apikey={api_key}&language=en"
+    
+    current_page: int = 0
+    while url and current_page < max_pages:
+        print(f"Fetching page {current_page + 1}...")
+        response = requests.get(url)
+        
+        if response.status_code == 200:
+            data = response.json()
+            articles = data.get("results", [])
+            all_articles.extend(articles)
+            
+            # Get the next page token
+            next_page = data.get("nextPage")
+            if next_page:
+                url = f"https://newsdata.io/api/1/latest?apikey={api_key}&language=en&page={next_page}"
+            else:
+                url = None
+                
+            current_page += 1
+        else:
+            print(f"Error fetching data: {response.status_code}")
+            print(response.text)
+            break
+            
+    return all_articles
 
-response = requests.get(url)
+articles = fetch_news(API_KEY) # Using default max_pages=60 from function signature
 
-if response.status_code == 200:
-    data = response.json()
-    articles = data.get("results", [])
-
+if articles:
     # Extract important fields
     news_data = []
     for article in articles:
-        # newsdata.io uses different field names:
         source = article.get("source_id") or article.get("source_name")
         
         author = article.get("creator")
@@ -24,8 +47,6 @@ if response.status_code == 200:
             author = ", ".join(author)
             
         published_at = article.get("pubDate")
-        # Format the date so it contains a 'T' to satisfy the regex parsing in our Jupyter notebook
-        # '2026-03-05 04:30:57' -> '2026-03-05T04:30:57Z'
         if published_at and " " in published_at:
             published_at = published_at.replace(" ", "T") + "Z"
 
@@ -42,8 +63,7 @@ if response.status_code == 200:
     # Save dataset
     df.to_csv("news_data.csv", index=False)
 
-    print("Data saved successfully to news_data.csv!")
+    print(f"Data saved successfully to news_data.csv! Total articles: {len(df)}")
     print(df.head())
 else:
-    print(f"Error fetching data: {response.status_code}")
-    print(response.text)
+    print("No articles fetched. Check your API key and connection.")
