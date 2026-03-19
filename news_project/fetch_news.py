@@ -1,7 +1,7 @@
 import requests
 import pandas as pd
 
-# 🔐 Replace with your API key from https://newsdata.io
+# 🔐 define the api key from https://newsdata.io
 API_KEY = "pub_937308483d6841c3a0da13fa0e3f8991"
 
 # Using newsdata.io API endpoint

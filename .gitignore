@@ -14,7 +14,7 @@ __pycache__/
 *$py.class
 
 # Data files
-*.csv
+
 *.xlsx
 *.db
 *.sqlite3
